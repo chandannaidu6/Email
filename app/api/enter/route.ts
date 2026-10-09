@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { ENTRIES_KEY, getRedis } from "../../../lib/redis";
+import { storeEntry } from "../../../lib/storage";
 import { normalizeEmail } from "../../../lib/email";
 
 export const dynamic = "force-dynamic";
@@ -30,8 +30,8 @@ export async function POST(req: Request) {
   }
 
   try {
-    // SADD is idempotent, so entering twice still counts once.
-    await getRedis().sadd(ENTRIES_KEY, email);
+    // The storage endpoint ignores duplicates, so entering twice counts once.
+    await storeEntry(email);
   } catch {
     // Deliberately not logging the email.
     console.error("raffle: failed to store entry");
