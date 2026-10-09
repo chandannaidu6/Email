@@ -1,7 +1,8 @@
 // Sends an entry to the private storage endpoint configured for this
-// deployment. The endpoint stores only the email address and ignores
-// addresses it already has.
-export async function storeEntry(email: string): Promise<void> {
+// deployment. The endpoint stores only the email address, enforces that
+// `token` hasn't been used before (one entry per completed study session),
+// and ignores email addresses it already has.
+export async function storeEntry(email: string, token: string): Promise<void> {
   const endpoint = process.env.STORAGE_ENDPOINT;
   const secret = process.env.STORAGE_SECRET;
   if (!endpoint || !secret) {
@@ -11,14 +12,27 @@ export async function storeEntry(email: string): Promise<void> {
   const res = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ secret, email }),
+    body: JSON.stringify({ secret, email, token }),
     redirect: "follow",
     cache: "no-store",
     signal: AbortSignal.timeout(15000),
   });
 
-  const data = (await res.json().catch(() => null)) as { ok?: boolean } | null;
+  const data = (await res.json().catch(() => null)) as { ok?: boolean; error?: string } | null;
   if (!res.ok || !data?.ok) {
-    throw new Error(`Storage rejected the entry (HTTP ${res.status}).`);
+    if (data?.error === "used") {
+      throw new StorageError("used", "This drawing link has already been used.");
+    }
+    throw new StorageError("rejected", `Storage rejected the entry (HTTP ${res.status}).`);
+  }
+}
+
+export class StorageError extends Error {
+  constructor(
+    public code: "used" | "rejected",
+    message: string,
+  ) {
+    super(message);
+    this.name = "StorageError";
   }
 }

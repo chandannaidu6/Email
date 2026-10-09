@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
-import { storeEntry } from "../../../lib/storage";
+import { storeEntry, StorageError } from "../../../lib/storage";
 import { normalizeEmail } from "../../../lib/email";
+import { checkToken } from "../../../lib/token";
 
 export const dynamic = "force-dynamic";
 
@@ -17,6 +18,18 @@ export async function POST(req: Request) {
     return NextResponse.json({ ok: true });
   }
 
+  // The link is only valid when it carries a token minted by the study
+  // app's completion page. Re-checked here (not just on page load) so a
+  // request sent straight to this endpoint, bypassing the page, is
+  // rejected the same way.
+  const check = checkToken(typeof body.token === "string" ? body.token : null);
+  if (!check.ok) {
+    return NextResponse.json(
+      { error: "This link is no longer valid. Please use the link from your completed study session." },
+      { status: 403 },
+    );
+  }
+
   if (body.completed !== true) {
     return NextResponse.json(
       { error: "Please confirm you completed the code review." },
@@ -30,9 +43,14 @@ export async function POST(req: Request) {
   }
 
   try {
-    // The storage endpoint ignores duplicates, so entering twice counts once.
-    await storeEntry(email);
-  } catch {
+    // The storage endpoint ignores duplicate emails and rejects a token
+    // it has already recorded, so entering twice (or reusing a shared
+    // link) counts once.
+    await storeEntry(email, check.payload);
+  } catch (err) {
+    if (err instanceof StorageError && err.code === "used") {
+      return NextResponse.json({ error: err.message }, { status: 409 });
+    }
     // Deliberately not logging the email.
     console.error("raffle: failed to store entry");
     return NextResponse.json(

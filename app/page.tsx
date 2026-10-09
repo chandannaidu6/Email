@@ -1,5 +1,7 @@
 import GiftCard from "./GiftCard";
 import RaffleForm from "./RaffleForm";
+import LockedView from "./LockedView";
+import { checkToken } from "../lib/token";
 
 const FACTS = [
   { value: "$100", label: "gift card each" },
@@ -27,7 +29,23 @@ const PROMISES = [
   },
 ];
 
-export default function Page() {
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ t?: string }>;
+}) {
+  const { t } = await searchParams;
+  const check = checkToken(t);
+
+  // This page only renders the entry form for a visitor who arrived with
+  // a valid, not-yet-used link minted by the study app's completion page.
+  // A bare or guessed URL, an expired link, or a link someone already
+  // used shows this message instead -- it never falls back to showing
+  // the form.
+  if (!check.ok) {
+    return <LockedView reason={check.reason} />;
+  }
+
   return (
     <main>
       <div className="backdrop" aria-hidden="true">
@@ -63,7 +81,7 @@ export default function Page() {
           <GiftCard />
         </div>
 
-        <RaffleForm />
+        <RaffleForm token={t!} />
       </section>
 
       <section className="promises" aria-labelledby="privacy-heading">

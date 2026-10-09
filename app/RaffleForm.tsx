@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 
 type Status = "idle" | "submitting" | "done";
 
-export default function RaffleForm() {
+export default function RaffleForm({ token }: { token: string }) {
   const [email, setEmail] = useState("");
   const [completed, setCompleted] = useState(false);
   const [website, setWebsite] = useState(""); // honeypot
@@ -31,7 +31,7 @@ export default function RaffleForm() {
       const res = await fetch("/api/enter", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, completed, website }),
+        body: JSON.stringify({ email, completed, website, token }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Something went wrong. Please try again.");

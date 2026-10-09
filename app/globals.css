@@ -416,6 +416,53 @@ h1 {
 
 .confetti { position: fixed; inset: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 50; }
 
+/* ---------- Locked view ---------- */
+.locked-stage {
+  min-height: calc(100vh - 112px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 40px 0;
+}
+.locked-panel {
+  max-width: 440px;
+  text-align: center;
+  padding: 40px 32px 34px;
+}
+.locked-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 56px;
+  height: 56px;
+  margin: 0 auto 18px;
+  border-radius: 50%;
+  background: rgba(44, 106, 61, 0.1);
+}
+.locked-icon svg {
+  width: 26px;
+  height: 26px;
+  fill: none;
+  stroke: var(--green-700);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.locked-panel h1 {
+  font-size: 24px;
+  margin: 0 0 10px;
+}
+.locked-panel p {
+  margin: 0 0 8px;
+  color: var(--panel-muted);
+  font-size: 15px;
+  line-height: 1.6;
+}
+.locked-panel .fine {
+  margin-top: 18px;
+  text-align: center;
+}
+
 /* ---------- Privacy ---------- */
 .promises { margin-top: 88px; }
 .promises h2 {
