@@ -28,7 +28,15 @@ export async function storeEntry(email: string, entryKey: string): Promise<void>
     if (data?.error === "used") {
       throw new StorageError("used", "This drawing link has already been used.");
     }
-    throw new StorageError("rejected", `Storage rejected the entry (HTTP ${res.status}).`);
+    // data?.error here is the storage endpoint's own reason code (e.g.
+    // "unauthorized" means STORAGE_SECRET doesn't match what it expects;
+    // "invalid" means it rejected the email/token shape; no error field at
+    // all usually means the endpoint is unreachable or misconfigured).
+    // It never contains the email, so it's safe to surface to the log.
+    throw new StorageError(
+      "rejected",
+      `Storage rejected the entry (HTTP ${res.status}${data?.error ? `, reason: ${data.error}` : ""}).`,
+    );
   }
 }
 

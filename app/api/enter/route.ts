@@ -56,8 +56,10 @@ export async function POST(req: Request) {
     if (err instanceof StorageError && err.code === "used") {
       return NextResponse.json({ error: err.message }, { status: 409 });
     }
-    // Deliberately not logging the email.
-    console.error("raffle: failed to store entry");
+    // Deliberately not logging the email -- the error's own message never
+    // contains it (see storeEntry/StorageError), only the failure reason
+    // (missing config, unreachable endpoint, non-ok response, etc.).
+    console.error("raffle: failed to store entry:", err instanceof Error ? err.message : err);
     return NextResponse.json(
       { error: "Something went wrong on our end. Please try again in a moment." },
       { status: 500 },
