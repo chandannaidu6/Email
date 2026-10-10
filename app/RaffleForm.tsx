@@ -7,7 +7,6 @@ type Status = "idle" | "submitting" | "done";
 export default function RaffleForm({ token }: { token: string }) {
   const [email, setEmail] = useState("");
   const [completed, setCompleted] = useState(false);
-  const [website, setWebsite] = useState(""); // honeypot
   const [status, setStatus] = useState<Status>("idle");
   const [error, setError] = useState<string | null>(null);
   const doneRef = useRef<HTMLHeadingElement>(null);
@@ -31,7 +30,7 @@ export default function RaffleForm({ token }: { token: string }) {
       const res = await fetch("/api/enter", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, completed, website, token }),
+        body: JSON.stringify({ email, completed, token }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data.error ?? "Something went wrong. Please try again.");
@@ -84,11 +83,6 @@ export default function RaffleForm({ token }: { token: string }) {
           onChange={(e) => setEmail(e.target.value)}
           disabled={submitting}
         />
-      </label>
-
-      <label className="hp" aria-hidden="true">
-        Website
-        <input tabIndex={-1} autoComplete="off" value={website} onChange={(e) => setWebsite(e.target.value)} />
       </label>
 
       <label className="confirm">

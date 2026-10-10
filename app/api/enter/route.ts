@@ -13,11 +13,6 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Invalid request." }, { status: 400 });
   }
 
-  // Honeypot: real people never see or fill this field.
-  if (typeof body.website === "string" && body.website.length > 0) {
-    return NextResponse.json({ ok: true });
-  }
-
   // The link is only valid when it carries a token minted by the study
   // app's completion page. Re-checked here (not just on page load) so a
   // request sent straight to this endpoint, bypassing the page, is
