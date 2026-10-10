@@ -1,8 +1,10 @@
 // Sends an entry to the private storage endpoint configured for this
 // deployment. The endpoint stores only the email address, enforces that
-// `token` hasn't been used before (one entry per completed study session),
-// and ignores email addresses it already has.
-export async function storeEntry(email: string, token: string): Promise<void> {
+// `entryKey` (the participant id, not the raw token -- a fresh token is
+// minted on every completion-page load, but the participant id stays the
+// same across those reloads) hasn't been used before, and ignores email
+// addresses it already has.
+export async function storeEntry(email: string, entryKey: string): Promise<void> {
   const endpoint = process.env.STORAGE_ENDPOINT;
   const secret = process.env.STORAGE_SECRET;
   if (!endpoint || !secret) {
@@ -12,7 +14,10 @@ export async function storeEntry(email: string, token: string): Promise<void> {
   const res = await fetch(endpoint, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ secret, email, token }),
+    // Field is still named "token" on the wire so the existing Apps
+    // Script storage endpoint needs no changes -- it just treats this as
+    // an opaque dedupe key, whatever the caller sends.
+    body: JSON.stringify({ secret, email, token: entryKey }),
     redirect: "follow",
     cache: "no-store",
     signal: AbortSignal.timeout(15000),

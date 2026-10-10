@@ -43,10 +43,15 @@ export async function POST(req: Request) {
   }
 
   try {
-    // The storage endpoint ignores duplicate emails and rejects a token
-    // it has already recorded, so entering twice (or reusing a shared
-    // link) counts once.
-    await storeEntry(email, check.payload);
+    // Keyed on participantId, not the raw token: the study app mints a
+    // fresh, independently-valid token on every page load, so keying this
+    // on the token itself would let a refreshed link be handed to someone
+    // else, or reused by the same person with a different email, and
+    // still succeed. Keying on participantId means the *first* successful
+    // submission for that participant consumes it for good -- any token
+    // minted afterwards for the same participant, no matter how many
+    // times the page was refreshed, is rejected as already used.
+    await storeEntry(email, check.participantId);
   } catch (err) {
     if (err instanceof StorageError && err.code === "used") {
       return NextResponse.json({ error: err.message }, { status: 409 });
